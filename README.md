@@ -22,6 +22,22 @@ The system compares multiple DNS providers including:
 
 ---
 
+## ❓ Why This Matters
+
+DNS inconsistencies can indicate filtering, misconfiguration, or security policies that affect service accessibility.
+
+A domain may appear accessible under one DNS resolver but be silently blocked or altered under another. This can lead to confusing behavior where users experience different results depending on their network configuration.
+
+---
+
+## 🔍 Key Insight
+
+Some DNS resolvers do not fail requests when blocking a domain. Instead, they return altered IP addresses (known as sinkhole responses).
+
+This makes the domain appear resolved successfully, while actually preventing access to the intended service.
+
+---
+
 ## 🎯 Features
 
 * ✅ Multi-DNS resolution comparison
