@@ -100,6 +100,35 @@ Findings:
 
 ---
 
+## 🚀 How to Run
+
+### 1. Create environment
+
+```
+conda create -n dns-monitor python=3.11
+conda activate dns-monitor
+```
+
+### 2. Install dependencies
+
+```
+pip install dnspython prometheus_client
+```
+
+### 3. Run exporter
+
+```
+python dns_test.py
+```
+
+### 4. Access metrics
+
+```
+http://localhost:8000/metrics
+```
+
+---
+
 ## 📈 Future Improvements
 
 * Add HTTP-level reachability checks
