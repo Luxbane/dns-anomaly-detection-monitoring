@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+   <link rel="icon" type="image/jpeg" href="IMG_20260330_092508.jpg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Monitoring</title>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body, html {
+        height: 100%;
+        font-family: sans-serif;
+        background: #050505;
+    }
+
+    iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: none;
+    }
+
+    #fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        background: radial-gradient(circle at center, #0b0b0b, #050505);
+    }
+
+    .card {
+        padding: 40px;
+        border-radius: 16px;
+        background: #111;
+        border: 1px solid #333;
+        box-shadow: 0 0 40px rgba(255, 75, 75, 0.15);
+        text-align: center;
+        max-width: 420px;
+        width: 90%;
+    }
+
+    .status-dot {
+        height: 12px;
+        width: 12px;
+        border-radius: 50%;
+        margin: 0 auto 20px;
+        animation: blink 1.5s infinite;
+    }
+
+    .connecting .status-dot {
+        background-color: #f7c948;
+        box-shadow: 0 0 12px #f7c948;
+    }
+
+    .closed .status-dot {
+        background-color: #ff4b4b;
+        box-shadow: 0 0 12px #ff4b4b;
+    }
+
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+
+    .card h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: #fff;
+        text-shadow: 0 0 8px rgba(255, 75, 75, 0.3);
+    }
+
+    .card p {
+        color: #888;
+        font-size: 1rem;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="fallback" class="connecting">
+    <div class="card">
+        <div class="status-dot"></div>
+        <h1 id="status-title">SERVER CONNECTING...</h1>
+        <p id="status-desc">Attempting to reach monitoring server...</p>
+    </div>
+</div>
+
+<iframe id="frame"></iframe>
+
+<script>
+const frame = document.getElementById("frame");
+const fallback = document.getElementById("fallback");
+const title = document.getElementById("status-title");
+const desc = document.getElementById("status-desc");
+
+let currentURL = null;
+let isOnline = false;
+let checking = false;
+
+const DASHBOARD_PATH = "/d/sjdjcw9e0/monitoring-home-network?orgId=1&from=now-30m&to=now&timezone=browser&refresh=5s&kiosk=true";
+
+function setConnecting() {
+    fallback.style.display = "flex";
+    fallback.classList.remove("closed");
+    fallback.classList.add("connecting");
+    title.innerText = "SERVER CONNECTING...";
+    desc.innerText = "Attempting to reach monitoring server...";
+}
+
+function setClosed() {
+    isOnline = false;
+
+    frame.removeAttribute("src");
+    frame.style.display = "none";
+
+    fallback.style.display = "flex";
+    fallback.classList.remove("connecting");
+    fallback.classList.add("closed");
+
+    title.innerText = "SERVER CLOSED";
+    desc.innerText = "Retrying automatically. If the page does not load, the monitoring server is currently offline.";
+}
+
+function setOnline(url) {
+    if (isOnline) return;
+
+    isOnline = true;
+
+    frame.src = url + DASHBOARD_PATH;
+
+    fallback.style.display = "none";
+    frame.style.display = "block";
+}
+
+
+function pingServer(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        let done = false;
+
+        img.onload = () => {
+            if (!done) {
+                done = true;
+                resolve(true);
+            }
+        };
+
+        img.onerror = () => {
+            if (!done) {
+                done = true;
+                reject(new Error("Ping gagal (Terhalang splash screen atau path salah)"));
+            }
+        };
+
+        img.src = url + "/public/img/fav32.png?t=" + Date.now();
+
+        setTimeout(() => {
+            if (!done) {
+                done = true;
+                reject(new Error("Timeout ping"));
+            }
+        }, 10000);
+    });
+}
+
+async function checkServer() {
+    if (checking) return;
+    checking = true;
+
+    try {
+        const res = await fetch("config.json?t=" + Date.now());
+        const data = await res.json();
+        const url = data.url;
+
+        if (!url) throw new Error("No URL found in config");
+
+        if (url !== currentURL) {
+            currentURL = url;
+            isOnline = false;
+            setConnecting();
+        }
+
+        await pingServer(url);
+
+        setOnline(url);
+
+    } catch (err) {
+        console.warn("Monitor status:", err.message);
+        setClosed();
+    } finally {
+        checking = false;
+    }
+}
+
+
+frame.removeAttribute("src");
+setConnecting();
+checkServer();
+
+
+setInterval(checkServer, 5000);
+</script>
+
+</body>
+</html>
