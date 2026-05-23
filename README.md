@@ -134,7 +134,7 @@ pip install dnspython prometheus_client
 ### 3. Run exporter
 
 ```
-python dns_test.py
+python dns_expoter.py
 ```
 
 ### 4. Access metrics
