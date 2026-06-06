@@ -18,7 +18,7 @@ g_valid = Gauge('dns_resolve_valid', 'DNS validity based on majority', ['dns'])
 def check_dns():
     results = {}
 
-    # 🔹 Step 1: resolve semua DNS
+    # 🔹 Step 1: resolve every DNS
     for name, ip in servers.items():
         resolver = dns.resolver.Resolver()
         resolver.nameservers = [ip]
@@ -34,7 +34,7 @@ def check_dns():
         except:
             results[name] = (None, 0)
 
-    # 🔹 Step 2: cari mayoritas IP
+    # 🔹 Step 2: Finding majority IP
     ips = [ip for ip, _ in results.values() if ip is not None]
     majority_ip = None
 
